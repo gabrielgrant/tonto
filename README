@@ -1,0 +1,19 @@
+Tonto - A poor Apache imitation
+
+Tonto is a single-file, configuration-free HTTP server that imitates (at a very basic level) the behaviour of Apache+mod_php: when run, it serves files below the current working directory, and executes any php scripts it finds using php-cgi. It's your trusty partner for local testing.
+
+Like Apache, it will return an index file when directories are requested, and show a basic index listing if there is no index file present.
+
+SECURITY WARNING: DON'T USE THIS CODE UNLESS YOU ARE INSIDE A FIREWALL
+-- it may execute arbitrary PHP code or external programs.
+
+The sole dependencies are Python (the language in which it is written) and php-cgi
+
+To ensure these are present, on Ubuntu, do:
+
+	sudo apt-get install python php-cgi
+
+
+Tonto has only been tested on Linux, so it may work on OS X and will almost certainly not work on Windows.
+
+Tonto includes a patched version of Python's CGIHTTPServer.py
