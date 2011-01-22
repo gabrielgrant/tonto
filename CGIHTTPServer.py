@@ -19,7 +19,7 @@ scripts cannot send other status codes such as 302 (redirect).
 """
 
 
-__version__ = "0.4"
+__version__ = "0.4-tonto"
 
 __all__ = ["CGIHTTPRequestHandler"]
 
@@ -106,6 +106,13 @@ class CGIHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def run_cgi(self):
         """Execute a CGI script."""
+        scriptname, scriptfile, script, rest, query = self.parse_request_path()
+        self.path_sanity_checks(scriptname, scriptfile)
+        env = self.build_cgi_env(scriptname, rest, query)
+        os.environ.update(env)
+        return self.output_script(scriptfile, script, query)
+
+    def parse_request_path(self):
         path = self.path
         dir, rest = self.cgi_info
 
@@ -138,6 +145,10 @@ class CGIHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         scriptname = dir + '/' + script
         scriptfile = self.translate_path(scriptname)
+        return scriptname, scriptfile, script, rest, query
+
+    def path_sanity_checks(self, scriptname, scriptfile):
+        print 'scriptfile', scriptfile
         if not os.path.exists(scriptfile):
             self.send_error(404, "No such CGI script (%r)" % scriptname)
             return
@@ -156,6 +167,7 @@ class CGIHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                                 scriptname)
                 return
 
+    def build_cgi_env(self, scriptname, rest, query):
         # Reference: http://hoohoo.ncsa.uiuc.edu/cgi/env.html
         # XXX Much of the following could be prepared ahead of time!
         env = {}
@@ -220,10 +232,11 @@ class CGIHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for k in ('QUERY_STRING', 'REMOTE_HOST', 'CONTENT_LENGTH',
                   'HTTP_USER_AGENT', 'HTTP_COOKIE', 'HTTP_REFERER'):
             env.setdefault(k, "")
-        os.environ.update(env)
+        return env
+
+    def output_script(self, scriptfile, script, query):
 
         self.send_response(200, "Script output follows")
-
         decoded_query = query.replace('+', ' ')
 
         if self.have_fork:
